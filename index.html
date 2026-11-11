@@ -5,26 +5,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Area Clienti · Metodo Integrato</title>
 <meta name="theme-color" content="#161614">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Metodo Integrato">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="styles.css">
-<style>html{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="base.css">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}[hidden]{display:none!important}
+.mi-bar{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;gap:6px}
+.mi-bar button{border:1px solid var(--line,#ddd);background:var(--surface,#fff);color:var(--ink,#161614);border-radius:99px;padding:7px 12px;font:600 .8rem var(--f-display,sans-serif);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.mi-code{font:700 1.6rem var(--f-display,sans-serif);letter-spacing:.3em;text-align:center}
+</style>
 </head>
 <body>
-<header class="top">
-  <div class="top-in">
-    <div class="brand"><div class="mark">MI</div><div><b>Metodo Integrato</b><small>Area clienti</small></div></div>
-    <div class="seg" role="group" aria-label="Scegli la vista" id="seg" hidden>
-      <button id="v-cliente" aria-pressed="false">Vista cliente</button>
-      <button id="v-coach" aria-pressed="true">Vista coach</button>
-    </div>
-  </div>
-</header>
-<main class="wrap" id="app"><div class="center">Caricamento…</div></main>
-<div class="toast" id="toast" hidden></div>
+<div id="app"><div class="p-wrap"><div class="empty">Caricamento…</div></div></div>
+<div class="mi-bar" id="mi-bar" hidden></div>
 <script type="module" src="app.js"></script>
 <script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));</script>
 </body>
