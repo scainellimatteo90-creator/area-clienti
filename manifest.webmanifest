@@ -1,0 +1,10 @@
+{
+  "name": "Metodo Integrato · Area clienti",
+  "short_name": "Metodo Integrato",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#161614",
+  "theme_color": "#161614",
+  "lang": "it",
+  "icons": [{"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
+}

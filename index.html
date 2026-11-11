@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Area Clienti · Metodo Integrato</title>
+<meta name="theme-color" content="#161614">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<style>html{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><div class="mark">MI</div><div><b>Metodo Integrato</b><small>Area clienti</small></div></div>
+    <div class="seg" role="group" aria-label="Scegli la vista" id="seg" hidden>
+      <button id="v-cliente" aria-pressed="false">Vista cliente</button>
+      <button id="v-coach" aria-pressed="true">Vista coach</button>
+    </div>
+  </div>
+</header>
+<main class="wrap" id="app"><div class="center">Caricamento…</div></main>
+<div class="toast" id="toast" hidden></div>
+<script type="module" src="app.js"></script>
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));</script>
+</body>
+</html>
