@@ -20,9 +20,9 @@ const errBox = m => `<p class="small" style="color:var(--bad)">${esc(m)}</p>`;
 let emailInviata = '';
 function viewLogin(msg = '') {
   page('Benvenuto', `<form class="card stack" id="f-mail" style="max-width:440px">
-    <p>Scrivi l'email che hai dato a Matteo: ti mandiamo un codice e un link per entrare. Niente password da ricordare.</p>
+    <p>Scrivi l'email che hai dato a Matteo: ti mandiamo un link per entrare. Niente password da ricordare.</p>
     <label class="fld"><span>La tua email</span><input id="mail" type="email" autocomplete="email" inputmode="email" required value="${esc(emailInviata)}"></label>
-    <button class="btn pri" type="submit">Inviami il codice</button>${msg}
+    <button class="btn pri" type="submit">Inviami il link</button>${msg}
   </form>`);
   document.getElementById('f-mail').onsubmit = async e => {
     e.preventDefault();
@@ -40,9 +40,9 @@ function viewLogin(msg = '') {
 }
 function viewCode(limite, msg = '') {
   page('Controlla la posta', `<form class="card stack" id="f-code" style="max-width:440px">
-    <p>Se <b>${esc(emailInviata)}</b> è registrata da Matteo, ti è appena arrivata una mail. Puoi <b>toccare il link</b> nella mail oppure scrivere qui il <b>codice</b> che contiene.</p>
-    ${limite ? '<p class="small muted">Hai già chiesto diversi codici: usa l\'ultimo che ti è arrivato o riprova tra 15 minuti.</p>' : ''}
-    <label class="fld"><span>Codice</span><input id="code" class="mi-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></label>
+    <p>Se <b>${esc(emailInviata)}</b> è registrata da Matteo, ti è appena arrivata una mail: <b>tocca il link</b> che contiene e sei dentro. Se la mail contiene anche un codice, puoi scriverlo qui sotto.</p>
+    ${limite ? '<p class="small muted">Hai già chiesto diverse mail: usa l\'ultima che ti è arrivata o riprova tra 15 minuti.</p>' : ''}
+    <label class="fld"><span>Codice (se c'è)</span><input id="code" class="mi-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></label>
     <button class="btn pri" type="submit">Entra</button>${msg}
     <p class="small muted">Non arriva nulla? Guarda nello spam. Se ancora niente, scrivi a Matteo: forse ha un'altra tua email.</p>
     <button class="btn sm" type="button" id="b-back">Cambia email</button>
@@ -75,9 +75,9 @@ async function entra() {
   ]);
   if (error) return page('Errore', `<div class="card">Non riesco a leggere i tuoi dati. Controlla la connessione e riapri l'app.</div>`);
   const coach = prof?.ruolo === 'coach';
-  const mie = coach ? righe.filter(r => r.email.toLowerCase() === sessioneUtente.email.toLowerCase()) : righe;
+  const mie = righe;
   barra(coach);
-  if (coach && !mie.length) return listaCoach(righe);
+  if (coach) return listaCoach(righe);
   if (!mie.length) return page('Quasi pronto', `<div class="card stack"><p>Hai fatto l'accesso con <b>${esc(sessioneUtente.email)}</b>, ma la tua area non è ancora attiva.</p><p>Scrivi a Matteo: appena la attiva, riapri l'app e trovi programma, alimentazione e progressi.</p></div>`);
   if (mie.length === 1) return apri(mie[0].gest_id, false);
   page('Chi sei?', `<div class="list">${mie.map(r => `<button class="li" style="width:100%;text-align:left;cursor:pointer" data-g="${esc(r.gest_id)}"><span class="main-t">${esc(r.nome)}</span></button>`).join('')}</div>`, 'Scegli il profilo');
@@ -86,7 +86,7 @@ async function entra() {
 
 function listaCoach(righe) {
   const fmt = d => new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
-  page('Clienti nell\'app', `<p class="muted">Sei entrato come coach. Tocca un cliente per vedere l'app come la vede lui (solo lettura).</p>
+  page('Clienti nell\'app', `<p class="muted">Sei entrato come coach. Tocca un cliente per vedere l'app come la vede lui (il diario lo può segnare solo il cliente).</p>
     <label class="fld"><span>Cerca</span><input id="q" placeholder="Nome…"></label>
     <div class="list" id="lst">${righe.map(r => `<button class="li" style="width:100%;text-align:left;cursor:pointer" data-g="${esc(r.gest_id)}" data-n="${esc(r.nome.toLowerCase())}"><span class="main-t">${esc(r.nome)}</span><span class="sub">aggiornato ${fmt(r.aggiornato_at)}</span></button>`).join('') || '<div class="empty">Nessun cliente pubblicato dal gestionale.</div>'}</div>`, 'Vista coach');
   document.getElementById('q').oninput = e => { const q = e.target.value.toLowerCase(); $app.querySelectorAll('[data-n]').forEach(b => b.hidden = !b.dataset.n.includes(q)); };
