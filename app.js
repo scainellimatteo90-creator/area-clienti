@@ -187,6 +187,18 @@ async function apri(gest_id, comeCoach) {
   const db = { doc: docRef, collection: colRef };
   const caps = { db, user, downloads: { save: async o => scarica(o) } };
   window.claude = { use: async n => caps[n] ?? null };
+  // Registro carichi: il cliente segna kg e note sulla programmazione
+  window.MI_APP = {
+    regLoad: async prog => {
+      const { data, error } = await sb.from('registro').select('seduta,esercizio,settimana,kg,fatto,data').eq('gest_id', G).eq('prog', prog);
+      if (error) throw error; return data || [];
+    },
+    regSave: async (prog, s, e, w, kg, fatto, data) => {
+      if (sola_lettura) throw Object.assign(new Error('anteprima'), { code: 'not_granted' });
+      const { error } = await sb.from('registro').upsert({ gest_id: G, prog, seduta: s, esercizio: e, settimana: w, kg: kg || '', fatto: fatto || '', data, aggiornato_at: new Date().toISOString(), importato: false });
+      if (error) throw error;
+    },
+  };
   let blocchi;
   try { blocchi = await codice(); } catch (e) {
     console.error(e);
