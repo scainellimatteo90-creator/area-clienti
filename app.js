@@ -90,7 +90,9 @@ function listaCoach(righe) {
     <label class="fld"><span>Cerca</span><input id="q" placeholder="Nome…"></label>
     <div class="list" id="lst">${righe.map(r => `<button class="li" style="width:100%;text-align:left;cursor:pointer" data-g="${esc(r.gest_id)}" data-n="${esc(r.nome.toLowerCase())}"><span class="main-t">${esc(r.nome)}</span><span class="sub">aggiornato ${fmt(r.aggiornato_at)}</span></button>`).join('') || '<div class="empty">Nessun cliente pubblicato dal gestionale.</div>'}</div>`, 'Vista coach');
   document.getElementById('q').oninput = e => { const q = e.target.value.toLowerCase(); $app.querySelectorAll('[data-n]').forEach(b => b.hidden = !b.dataset.n.includes(q)); };
-  $app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => apri(b.dataset.g, true));
+  const mia = String(sessioneUtente?.email || '').toLowerCase();
+  // il coach può segnare davvero solo sul proprio profilo (le regole del database lo permettono solo lì)
+  $app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { const r = righe.find(x => x.gest_id === b.dataset.g); apri(b.dataset.g, String(r?.email || '').toLowerCase() !== mia); });
 }
 
 function barra(coach) {
@@ -189,6 +191,7 @@ async function apri(gest_id, comeCoach) {
   window.claude = { use: async n => caps[n] ?? null };
   // Registro carichi: il cliente segna kg e note sulla programmazione
   window.MI_APP = {
+    sola: sola_lettura,
     regLoad: async prog => {
       const { data, error } = await sb.from('registro').select('seduta,esercizio,settimana,kg,fatto,data').eq('gest_id', G).eq('prog', prog);
       if (error) throw error; return data || [];
