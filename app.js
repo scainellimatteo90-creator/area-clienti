@@ -91,7 +91,7 @@ const baseMail = e => String(e || '').toLowerCase().trim().replace(/\+[^@]*@/, '
 function homeCoach(righe) {
   const mia = baseMail(sessioneUtente?.email);
   const mio = righe.find(r => baseMail(r.email) === mia);
-  const btn = 'style="all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;width:100%;padding:22px 20px;border-radius:var(--r);min-height:110px;justify-content:center"';
+  const btn = 'style="box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:6px;width:100%;padding:22px 20px;border-radius:var(--r);min-height:110px;justify-content:center;background:var(--surface);border:1px solid var(--line);box-shadow:inset 4px 0 0 var(--accent);color:var(--ink);font:inherit"';
   page('Ciao Matteo', `<div class="stack" style="max-width:520px">
     ${mio ? `<button id="b-mio" ${btn} class="card" ><span class="eyebrow">Ingresso 1</span><b style="font-family:var(--f-display);font-size:1.6rem;text-transform:uppercase">Il mio profilo</b><span class="small muted">La tua app da cliente: programma, alimentazione, carichi e diario.</span></button>`
       : `<div class="card small muted">Il tuo profilo da cliente non è ancora pubblicato nell'app: attivalo dal gestionale.</div>`}
