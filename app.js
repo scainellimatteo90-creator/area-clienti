@@ -78,26 +78,43 @@ async function entra() {
   const coach = prof?.ruolo === 'coach';
   const mie = righe;
   barra(coach);
-  if (coach) return listaCoach(righe);
+  if (coach) return homeCoach(righe);
   if (!mie.length) return page('Quasi pronto', `<div class="card stack"><p>Hai fatto l'accesso con <b>${esc(sessioneUtente.email)}</b>, ma la tua area non è ancora attiva.</p><p>Scrivi a Matteo: appena la attiva, riapri l'app e trovi programma, alimentazione e progressi.</p></div>`);
   if (mie.length === 1) return apri(mie[0].gest_id, false);
   page('Chi sei?', `<div class="list">${mie.map(r => `<button class="li" style="width:100%;text-align:left;cursor:pointer" data-g="${esc(r.gest_id)}"><span class="main-t">${esc(r.nome)}</span></button>`).join('')}</div>`, 'Scegli il profilo');
   $app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => apri(b.dataset.g, false));
 }
 
+// coach: all'apertura due ingressi. 1) il proprio profilo da cliente (si segna davvero: il database lo permette
+// solo sul profilo con la sua stessa email, alias +… compresi); 2) l'area coach con i clienti, in sola lettura.
+const baseMail = e => String(e || '').toLowerCase().trim().replace(/\+[^@]*@/, '@');
+function homeCoach(righe) {
+  const mia = baseMail(sessioneUtente?.email);
+  const mio = righe.find(r => baseMail(r.email) === mia);
+  const btn = 'style="all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;width:100%;padding:22px 20px;border-radius:var(--r);min-height:110px;justify-content:center"';
+  page('Ciao Matteo', `<div class="stack" style="max-width:520px">
+    ${mio ? `<button id="b-mio" ${btn} class="card" ><span class="eyebrow">Ingresso 1</span><b style="font-family:var(--f-display);font-size:1.6rem;text-transform:uppercase">Il mio profilo</b><span class="small muted">La tua app da cliente: programma, alimentazione, carichi e diario.</span></button>`
+      : `<div class="card small muted">Il tuo profilo da cliente non è ancora pubblicato nell'app: attivalo dal gestionale.</div>`}
+    <button id="b-coach" ${btn} class="card"><span class="eyebrow">Ingresso 2</span><b style="font-family:var(--f-display);font-size:1.6rem;text-transform:uppercase">Area coach · clienti</b><span class="small muted">Apri l'area di ogni cliente e la vedi esattamente come la vede lui, in sola lettura.</span></button>
+  </div>`, 'Scegli dove entrare');
+  if (mio) document.getElementById('b-mio').onclick = () => apri(mio.gest_id, false);
+  document.getElementById('b-coach').onclick = () => listaCoach(righe);
+}
+
 function listaCoach(righe) {
   const fmt = d => new Date(d).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' });
-  page('Clienti nell\'app', `<p class="muted">Sei entrato come coach. Tocca un cliente per vedere l'app come la vede lui (il diario lo può segnare solo il cliente).</p>
+  page('Clienti nell\'app', `<button class="btn sm" id="b-home" style="align-self:flex-start">← Indietro</button><p class="muted">Tocca un cliente per vedere la sua area esattamente come la vede lui. <b>Sola lettura</b>: niente carichi, check-in, diario o alimenti salvati a suo nome.</p>
     <label class="fld"><span>Cerca</span><input id="q" placeholder="Nome…"></label>
     <div class="list" id="lst">${righe.map(r => `<button class="li" style="width:100%;text-align:left;cursor:pointer" data-g="${esc(r.gest_id)}" data-n="${esc(r.nome.toLowerCase())}"><span class="main-t">${esc(r.nome)}</span><span class="sub">aggiornato ${fmt(r.aggiornato_at)}</span></button>`).join('') || '<div class="empty">Nessun cliente pubblicato dal gestionale.</div>'}</div>`, 'Vista coach');
+  document.getElementById('b-home').onclick = () => homeCoach(righe);
   document.getElementById('q').oninput = e => { const q = e.target.value.toLowerCase(); $app.querySelectorAll('[data-n]').forEach(b => b.hidden = !b.dataset.n.includes(q)); };
   const mia = String(sessioneUtente?.email || '').toLowerCase();
   // il coach può segnare davvero solo sul proprio profilo (le regole del database lo permettono solo lì)
-  $app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { const r = righe.find(x => x.gest_id === b.dataset.g); apri(b.dataset.g, String(r?.email || '').toLowerCase() !== mia); });
+  $app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { const r = righe.find(x => x.gest_id === b.dataset.g); apri(b.dataset.g, baseMail(r?.email) !== baseMail(mia)); });
 }
 
 function barra(coach) {
-  $bar.innerHTML = `${coach ? '<button id="b-clienti">← Clienti</button>' : ''}<button id="b-esci">Esci</button>`;
+  $bar.innerHTML = `${coach ? '<button id="b-clienti">← Home coach</button>' : ''}<button id="b-esci">Esci</button>`;
   $bar.hidden = false;
   document.getElementById('b-esci').onclick = async () => { await sb.auth.signOut(); location.replace(location.pathname); };
   const bc = document.getElementById('b-clienti');
