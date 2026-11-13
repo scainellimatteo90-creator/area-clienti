@@ -40,9 +40,10 @@ function viewLogin(msg = '') {
 }
 function viewCode(limite, msg = '') {
   page('Controlla la posta', `<form class="card stack" id="f-code" style="max-width:440px">
-    <p>Se <b>${esc(emailInviata)}</b> è registrata da Matteo, ti è appena arrivata una mail: <b>tocca il link</b> che contiene e sei dentro. Se la mail contiene anche un codice, puoi scriverlo qui sotto.</p>
+    <p>Se <b>${esc(emailInviata)}</b> è registrata da Matteo, ti è appena arrivata una mail con un <b>codice</b>: <b>scrivilo qui sotto</b> e resti connesso su questo telefono.</p>
+    <p class="small muted">Meglio il codice che il link: il link si apre nel browser e, se usi l'app dalla schermata Home (soprattutto su iPhone), l'app resterebbe fuori.</p>
     ${limite ? '<p class="small muted">Hai già chiesto diverse mail: usa l\'ultima che ti è arrivata o riprova tra 15 minuti.</p>' : ''}
-    <label class="fld"><span>Codice (se c'è)</span><input id="code" class="mi-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></label>
+    <label class="fld"><span>Codice della mail</span><input id="code" class="mi-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></label>
     <button class="btn pri" type="submit">Entra</button>${msg}
     <p class="small muted">Non arriva nulla? Guarda nello spam. Se ancora niente, scrivi a Matteo: forse ha un'altra tua email.</p>
     <button class="btn sm" type="button" id="b-back">Cambia email</button>
@@ -59,7 +60,7 @@ function viewCode(limite, msg = '') {
 /* ---------------- dopo l'accesso ---------------- */
 let avviato = false, sessioneUtente = null;
 sb.auth.onAuthStateChange((ev, session) => {
-  if (session && !avviato) { avviato = true; sessioneUtente = session.user; setTimeout(entra, 0); }
+  if (session && !avviato) { try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (_) { /* ok */ } avviato = true; sessioneUtente = session.user; setTimeout(entra, 0); }
   if (!session && ev === 'SIGNED_OUT') { location.replace(location.pathname); }
 });
 (async () => {
