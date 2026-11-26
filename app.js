@@ -6,6 +6,19 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/+esm';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 
+// Link unico dal questionario di benvenuto: la pagina del sito apre l'app con #nuovo=EMAIL.
+// L'email sta dopo il # (non arriva a nessun server); la leggo e la tolgo subito dall'indirizzo.
+let NUOVO = '', DAL_Q = false;
+try {
+  const m = location.hash.match(/^#nuovo(?:=([^&]*))?/);
+  if (m) {
+    DAL_Q = true; NUOVO = decodeURIComponent(m[1] || '').trim().toLowerCase().slice(0, 200);
+    history.replaceState(null, '', location.pathname + location.search);
+    sessionStorage.setItem('mi-nuovo', '1');
+  }
+} catch (_) { /* ok */ }
+const isNuovo = () => { try { return DAL_Q || sessionStorage.getItem('mi-nuovo') === '1'; } catch (_) { return DAL_Q; } };
+
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { flowType: 'implicit', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
@@ -17,12 +30,18 @@ const page = (t, body, sub) => { $app.innerHTML = head(t, sub) + `<div class="p-
 const errBox = m => `<p class="small" style="color:var(--bad)">${esc(m)}</p>`;
 
 /* ---------------- accesso ---------------- */
-let emailInviata = '';
+let emailInviata = NUOVO;
+const AVVISO_NUOVO = '<p class="small muted">Usa la <b>stessa email che hai scritto nel questionario</b>: così l\'app si collega da sola alla tua scheda. Se è un\'email di lavoro e il codice non arriva, scrivi a Matteo.</p>';
+const AVVISO_MAIL = '<p class="small muted">Meglio un\'email <b>personale</b> (Gmail, iCloud, Libero…): quelle di lavoro spesso bloccano il codice prima che arrivi a te.</p>';
 function viewLogin(msg = '') {
-  page('Benvenuto', `<form class="card stack" id="f-mail" style="max-width:440px">
-    <p>Scrivi l'email che hai dato a Matteo: ti mandiamo un link per entrare. Niente password da ricordare.</p>
+  const nuovo = isNuovo();
+  page(nuovo ? 'Ultimo passo' : 'Benvenuto', `<form class="card stack" id="f-mail" style="max-width:440px">
+    ${nuovo
+      ? '<p><b>Questionario ricevuto ✓</b> Ora attiva la tua app: qui trovi il programma, l\'alimentazione e i progressi appena sono pronti.</p><p>Controlla l\'email qui sotto e tocca il pulsante: ti mandiamo un codice per entrare. Niente password da ricordare.</p>'
+      : '<p>Scrivi l\'email che hai dato a Matteo: ti mandiamo un codice per entrare. Niente password da ricordare.</p>'}
     <label class="fld"><span>La tua email</span><input id="mail" type="email" autocomplete="email" inputmode="email" required value="${esc(emailInviata)}"></label>
-    <button class="btn pri" type="submit">Inviami il link</button>${msg}
+    ${nuovo ? AVVISO_NUOVO : AVVISO_MAIL}
+    <button class="btn pri" type="submit">Inviami il codice</button>${msg}
   </form>`);
   document.getElementById('f-mail').onsubmit = async e => {
     e.preventDefault();
@@ -30,7 +49,7 @@ function viewLogin(msg = '') {
     const b = e.target.querySelector('button'); b.disabled = true; b.textContent = 'Invio…';
     try {
       const r = await fetch(`${SUPABASE_URL}/functions/v1/accesso`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }, body: JSON.stringify({ email }),
+        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY }, body: JSON.stringify(nuovo ? { email, nuovo: true } : { email }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error === 'email' ? 'Controlla l\'email: sembra scritta male.' : 'Invio non riuscito, riprova tra qualche minuto.');
@@ -40,12 +59,12 @@ function viewLogin(msg = '') {
 }
 function viewCode(limite, msg = '') {
   page('Controlla la posta', `<form class="card stack" id="f-code" style="max-width:440px">
-    <p>Se <b>${esc(emailInviata)}</b> è registrata da Matteo, ti è appena arrivata una mail con un <b>codice</b>: <b>scrivilo qui sotto</b> e resti connesso su questo telefono.</p>
+    <p>${isNuovo() ? 'A' : 'Se'} <b>${esc(emailInviata)}</b>${isNuovo() ? '' : ' è registrata da Matteo,'} ti è appena arrivata una mail con un <b>codice</b>: <b>scrivilo qui sotto</b> e resti connesso su questo telefono.</p>
     <p class="small muted">Meglio il codice che il link: il link si apre nel browser e, se usi l'app dalla schermata Home (soprattutto su iPhone), l'app resterebbe fuori.</p>
     ${limite ? '<p class="small muted">Hai già chiesto diverse mail: usa l\'ultima che ti è arrivata o riprova tra 15 minuti.</p>' : ''}
     <label class="fld"><span>Codice della mail</span><input id="code" class="mi-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></label>
     <button class="btn pri" type="submit">Entra</button>${msg}
-    <p class="small muted">Non arriva nulla? Guarda nello spam. Se ancora niente, scrivi a Matteo: forse ha un'altra tua email.</p>
+    <p class="small muted">Non arriva nulla? Guarda nello spam e nella cartella Promozioni. Se usi un'email di lavoro, prova con una personale. Se ancora niente, scrivi a Matteo.</p>
     <button class="btn sm" type="button" id="b-back">Cambia email</button>
   </form>`);
   document.getElementById('b-back').onclick = () => viewLogin();
@@ -79,7 +98,7 @@ async function entra() {
   const mie = righe;
   barra(coach);
   if (coach) return homeCoach(righe);
-  if (!mie.length) return page('Quasi pronto', `<div class="card stack"><p>Hai fatto l'accesso con <b>${esc(sessioneUtente.email)}</b>, ma la tua area non è ancora attiva.</p><p>Scrivi a Matteo: appena la attiva, riapri l'app e trovi programma, alimentazione e progressi.</p></div>`);
+  if (!mie.length) return page('Quasi pronto', `<div class="card stack"><p><b>Sei dentro ✓</b> Hai fatto l'accesso con <b>${esc(sessioneUtente.email)}</b> e resti connesso su questo telefono.</p><p>Matteo sta preparando la tua area: quando è pronta ti avvisa e qui trovi programma, alimentazione e progressi.</p><p class="small muted">Consiglio: aggiungi l'app alla schermata Home (menu del browser → «Aggiungi a schermata Home»), così la ritrovi con un tocco.</p></div>`);
   if (mie.length === 1) return apri(mie[0].gest_id, false);
   page('Chi sei?', `<div class="list">${mie.map(r => `<button class="li" style="width:100%;text-align:left;cursor:pointer" data-g="${esc(r.gest_id)}"><span class="main-t">${esc(r.nome)}</span></button>`).join('')}</div>`, 'Scegli il profilo');
   $app.querySelectorAll('[data-g]').forEach(b => b.onclick = () => apri(b.dataset.g, false));
